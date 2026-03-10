@@ -1,10 +1,17 @@
-from capture.text_extract import extract_text_from_image
-from generate.prompt import build_prompt
+"""
+Screenshot-Based AI Desktop Assistant
+Entry point for launching the application.
+"""
+import sys
+import os
 
-image_path = "capture/img/eclip_ss.png"
-extracted_text = extract_text_from_image(image_path)
-interpreted = interpret_text(extracted_text)
-prompt = build_prompt(interpreted)
-response = send_prompt(prompt)  # ChatGPT used by default
+# Add project root to path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-print("\n🧠 LLM Response:\n", response)
+from capture.snip_tool import launch_tool
+
+if __name__ == "__main__":
+    print("🚀 Starting Eclip AI Desktop Assistant...")
+    print("📸 Press Ctrl+Alt+X to capture a screenshot")
+    print("⚙️  Right-click system tray icon for settings")
+    launch_tool()

@@ -1,7 +1,8 @@
 {
     "api_keys": {
-        "ChatGPT": ""
+        "ChatGPT": "gAAAAABpr-ie1vLqt6E4Rnq8wTgN-Fr_0XtCh4bcLPjqAA3lBjHSaMPM0L_KpNPqpyxQ5DFeDbdeSvubgtUz2XBFa_-Y01IGWZUpjV_320CGmsycqEYeaQKR03DTHgu_D1-rWjlhgmgmOyKu7eAfqHzomRqX_JN_rcaAoCYNjsXWMUxG5XcoYd0SeRN--4Rh0ACwHQabMYr4C3XjSdUZAH0NXTfYqoR1o8skZW__pHC9uvHUOGsG8bkV6q-GXHpaQn0ScB9IxtWFveLVwMk8BYhBKzbp38zt4krvoJ7fwlrh5KxjoYug18U=",
+        "Gemini": "gAAAAABpr-2r7Lkb71lqY5iIR2D4sbCiy-QbsRh3XxSg8jIQpEpxj7cn1XxVgv5Em4sMeokJ2BtPfED5uejuUVL_r8z4kxGm8ocrUxa9ZX94kP4bIX3GyFiMzcAe4pNgMvJhq0HQVmpf"
     },
-    "selected_model": "ChatGPT",
+    "selected_model": "Gemini",
     "correction_mode": false
 }
