@@ -2,11 +2,7 @@ import openai
 from settings import config, store_key
 from generate.prompt import build_prompt
 
-def send_to_chatgpt(extracted_text: str) -> str:
-    cfg = config.load_config()
-    correction_mode = cfg.get("correction_mode", False)
-    prompt = build_prompt(extracted_text, correction_mode)
-
+def send_prompt_to_chatgpt(prompt: str) -> str:
     api_key = store_key.load_api_key("ChatGPT")  # Load and decrypt
     if not api_key:
         return "API key not found."

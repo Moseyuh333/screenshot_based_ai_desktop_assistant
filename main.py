@@ -1,10 +1,4 @@
-from capture.text_extract import extract_text_from_image
-from generate.prompt import build_prompt
+from capture.snip_tool import launch_tool
 
-image_path = "capture/img/eclip_ss.png"
-extracted_text = extract_text_from_image(image_path)
-interpreted = interpret_text(extracted_text)
-prompt = build_prompt(interpreted)
-response = send_prompt(prompt)  # ChatGPT used by default
-
-print("\n🧠 LLM Response:\n", response)
+if __name__ == "__main__":
+    launch_tool()
