@@ -80,15 +80,16 @@ class SnipWidget(QtWidgets.QWidget):
                     # Build Prompt based on Correction Mode
                     from generate.prompt import build_prompt
                     from settings.config import load_config
-                    config = load_config()
-                    correction_mode = config.get("correction_mode", False)
+                    user_config = load_config()
+                    correction_mode = user_config.get("correction_mode", False)
                     prompt = build_prompt(extracted_text, correction_mode)
 
                     print("Prompt sent to API:\n", prompt)
 
                     # Send to LLM API
-                    from send.llm_clients.ask_chatgpt import send_to_chatgpt
-                    response_text = send_to_chatgpt(prompt)
+                    from send.response import dispatch_prompt
+                    selected_model = user_config.get("selected_model", "ChatGPT")
+                    response_text = dispatch_prompt(prompt, selected_model)
                     print("LLM API RESPONSE:\n", response_text)
 
                     # Update GUI in main thread

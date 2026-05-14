@@ -9,12 +9,13 @@ def dispatch_prompt(prompt: str, model: str = "chatgpt") -> str:
     :param model: Target model name (chatgpt, claude, gemini).
     :return: AI model's response or error string.
     """
+    model = model.lower()
     if model == "chatgpt":
         return ask_chatgpt.send_prompt_to_chatgpt(prompt)
     elif model == "claude":
-        return ask_chatgpt.send_prompt_to_claude(prompt)
+        return "Claude not yet implemented."
     elif model == "gemini":
-        return ask_chatgpt.send_prompt_to_gemini(prompt)
+        return "Gemini not yet implemented."
     else:
         return "Invalid model selected."
 

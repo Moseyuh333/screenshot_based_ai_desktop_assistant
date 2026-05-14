@@ -12,8 +12,9 @@ def extract_text_from_image(image_path):
     result = ocr.ocr(image_path, cls=True)
 
     extracted_text_list = []
-    for line in result[0]:
-        text = line[1][0]
-        extracted_text_list.append(text)
+    if result and result[0]:
+        for line in result[0]:
+            text = line[1][0]
+            extracted_text_list.append(text)
 
     return "\n".join(extracted_text_list)
