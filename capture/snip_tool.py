@@ -20,6 +20,7 @@ class SnipWidget(QtWidgets.QWidget):
         self.app_ref = app_ref
         self.begin = QtCore.QPoint()
         self.end = QtCore.QPoint()
+        self.loading_popup = None
         self.setGeometry(self.screen_geometry)
         self.setWindowOpacity(0.3)
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
@@ -51,6 +52,7 @@ class SnipWidget(QtWidgets.QWidget):
         # Create the popup now, but show it only after the screenshot is saved.
         # Otherwise OCR can read the popup text from the screenshot itself.
         self.loading_popup = ResponsePopup(message="Processing screenshot... Please wait...")
+        self.app_ref.keep_popup(self.loading_popup)
 
         # Close snip tool widget
         QtWidgets.QApplication.restoreOverrideCursor()
@@ -61,12 +63,25 @@ class SnipWidget(QtWidgets.QWidget):
         # Run screenshot + OCR in background thread
         threading.Thread(target=self.capture_and_process, args=(bbox,), daemon=True).start()
 
-    def show_error(self, message):
-        def show_error_on_main():
-            self.loading_popup.set_message(message)
-            self.loading_popup.show_response(message)
+    def show_processing_popup(self):
+        if self.loading_popup:
+            QtCore.QMetaObject.invokeMethod(
+                self.loading_popup,
+                "show_processing",
+                QtCore.Qt.QueuedConnection,
+            )
 
-        QtCore.QTimer.singleShot(0, show_error_on_main)
+    def show_response_popup(self, message):
+        if self.loading_popup:
+            QtCore.QMetaObject.invokeMethod(
+                self.loading_popup,
+                "show_response",
+                QtCore.Qt.QueuedConnection,
+                QtCore.Q_ARG(str, message),
+            )
+
+    def show_error(self, message):
+        self.show_response_popup(message)
 
     def capture_and_process(self, bbox):
         try:
@@ -77,8 +92,7 @@ class SnipWidget(QtWidgets.QWidget):
             img_path = os.path.join(img_dir, "eclip_ss.png")
             img.save(img_path)
             print("Screenshot saved")
-            QtCore.QTimer.singleShot(0, self.loading_popup.show)
-            QtCore.QTimer.singleShot(0, QtWidgets.QApplication.processEvents)
+            self.show_processing_popup()
 
             # Background task to process OCR + API
             def process_ocr():
@@ -104,13 +118,8 @@ class SnipWidget(QtWidgets.QWidget):
                     response_text = dispatch_prompt(prompt, selected_model)
                     print("LLM API RESPONSE:\n", response_text)
 
-                    # Update GUI in main thread
-                    def show_response_on_main():
-                        print("Updating popup with response text...")
-                        self.loading_popup.set_message(response_text)
-                        self.loading_popup.show_response(response_text)
-
-                    QtCore.QTimer.singleShot(0, show_response_on_main)
+                    print("Updating popup with response text...")
+                    self.show_response_popup(response_text)
 
                 except Exception as e:
                     error_message = f"Error during OCR/API: {e}"
@@ -130,9 +139,18 @@ class SnipApp(QtWidgets.QApplication):
     def __init__(self, argv):
         super().__init__(argv)
         self.widgets = []
+        self.popups = []
         self.tray_icon = None
         self.settings_window = None
         self.setup_tray()
+
+    def keep_popup(self, popup):
+        self.popups.append(popup)
+        popup.destroyed.connect(lambda *_: self.release_popup(popup))
+
+    def release_popup(self, popup):
+        if popup in self.popups:
+            self.popups.remove(popup)
 
     def setup_tray(self):
         icon = QtGui.QIcon(TRAY_ICON_PATH)
