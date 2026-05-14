@@ -1,0 +1,13 @@
+{
+    "api_keys": {
+        "ChatGPT": ""
+    },
+    "base_urls": {
+        "ChatGPT": "https://api.zunef.space/v1"
+    },
+    "model_names": {
+        "ChatGPT": "openai/gpt-oss-120b"
+    },
+    "selected_model": "ChatGPT",
+    "correction_mode": false
+}

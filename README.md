@@ -42,8 +42,9 @@ cd screenshot_based_ai_desktop_assistant
 pip install -r requirements.txt  
 3. Run the app:  
 python main.py  
-4. Add your API key:  
+4. Add your API key, Base URL, and Model name:  
 Open the app’s settings panel and paste in your OpenAI or Gemini API key.  
+For OpenAI-compatible APIs, set Base URL to the endpoint root that includes `/v1` and set Model name to the model required by your provider. Example for Zunef: `https://api.zunef.space/v1`.  
 You're now ready to use the screenshot hotkey (Ctrl + Alt + X).  
 ## Usage  
 - Press Ctrl + Alt + X to snip a region of your screen  
@@ -67,7 +68,7 @@ Ensure no other tkinter windows are blocking. Restart the app.
 - Hotkey not working?  
 Edit `settings.json` or use the app’s Settings menu to change the hotkey.  
 - LLM not responding?  
-Verify your API key and try a smaller text region. Ensure internet access.  
+Verify your API key, Base URL, Model name, and internet access. For OpenAI-compatible APIs, the Base URL should include `/v1`, for example `https://api.zunef.space/v1`.  
 ## Future Improvements  
 - Support for multiple LLM providers via dropdown  
 - Offline handwriting OCR  

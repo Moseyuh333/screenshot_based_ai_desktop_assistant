@@ -7,6 +7,10 @@ from PIL import ImageGrab
 from settings.ui_settings import SettingsWindow
 from settings.ui_response import ResponsePopup
 
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CAPTURE_IMG_DIR = os.path.join(PROJECT_ROOT, "capture", "img")
+TRAY_ICON_PATH = os.path.join(CAPTURE_IMG_DIR, "arrow.png")
+
 
 class SnipWidget(QtWidgets.QWidget):
     def __init__(self, screen_geometry, scale_factor, app_ref):
@@ -44,10 +48,9 @@ class SnipWidget(QtWidgets.QWidget):
         y2 = max(self.begin.y(), self.end.y()) * self.scale_factor + self.screen_geometry.y()
         bbox = (x1, y1, x2, y2)
 
-        # Show loading popup
+        # Create the popup now, but show it only after the screenshot is saved.
+        # Otherwise OCR can read the popup text from the screenshot itself.
         self.loading_popup = ResponsePopup(message="Processing screenshot... Please wait...")
-        self.loading_popup.show()
-        QtWidgets.QApplication.processEvents()
 
         # Close snip tool widget
         QtWidgets.QApplication.restoreOverrideCursor()
@@ -58,21 +61,30 @@ class SnipWidget(QtWidgets.QWidget):
         # Run screenshot + OCR in background thread
         threading.Thread(target=self.capture_and_process, args=(bbox,), daemon=True).start()
 
-    def capture_and_process(self, bbox):
-        from capture.text_extract import extract_text_from_image
+    def show_error(self, message):
+        def show_error_on_main():
+            self.loading_popup.set_message(message)
+            self.loading_popup.show_response(message)
 
+        QtCore.QTimer.singleShot(0, show_error_on_main)
+
+    def capture_and_process(self, bbox):
         try:
             # Screenshot
             img = ImageGrab.grab(bbox=bbox, all_screens=True)
-            img_dir = os.path.join(os.getcwd(), "img")
+            img_dir = CAPTURE_IMG_DIR
             os.makedirs(img_dir, exist_ok=True)
             img_path = os.path.join(img_dir, "eclip_ss.png")
             img.save(img_path)
             print("Screenshot saved")
+            QtCore.QTimer.singleShot(0, self.loading_popup.show)
+            QtCore.QTimer.singleShot(0, QtWidgets.QApplication.processEvents)
 
             # Background task to process OCR + API
             def process_ocr():
                 try:
+                    from capture.text_extract import extract_text_from_image
+
                     # OCR
                     extracted_text = extract_text_from_image(img_path)
                     print("Extracted Text:\n", extracted_text)
@@ -101,13 +113,17 @@ class SnipWidget(QtWidgets.QWidget):
                     QtCore.QTimer.singleShot(0, show_response_on_main)
 
                 except Exception as e:
-                    print("Error during OCR/API:", e)
+                    error_message = f"Error during OCR/API: {e}"
+                    print(error_message)
+                    self.show_error(error_message)
 
             # Run everything in background
             threading.Thread(target=process_ocr, daemon=True).start()
 
         except Exception as e:
-            print("Error during capture_and_process:", e)
+            error_message = f"Error during capture/process: {e}"
+            print(error_message)
+            self.show_error(error_message)
 
 
 class SnipApp(QtWidgets.QApplication):
@@ -119,8 +135,9 @@ class SnipApp(QtWidgets.QApplication):
         self.setup_tray()
 
     def setup_tray(self):
-        icon_path = os.path.join(os.getcwd(), "img", "arrow.png")
-        icon = QtGui.QIcon(icon_path) if os.path.exists(icon_path) else QtGui.QIcon()
+        icon = QtGui.QIcon(TRAY_ICON_PATH)
+        if icon.isNull():
+            print(f"Tray icon not found or invalid: {TRAY_ICON_PATH}")
 
         self.tray_icon = QtWidgets.QSystemTrayIcon(self)
         self.tray_icon.setIcon(icon)

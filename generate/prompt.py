@@ -8,23 +8,19 @@ def build_prompt(extracted_text: str, correction_mode: bool = False) -> str:
     """
 
     if correction_mode:
-        prompt = f"""You are a text correction assistant.
-        Your task is to return a corrected version of the text.
-        If unclear, resolve meaning in the most logical and helpful way.
-        Text:
-        \"\"\"
-        {extracted_text}
-        \"\"\""""
+        prompt = f"""Correct the OCR text below.
+Return only the corrected text. Do not explain your instructions.
+Keep the original language.
+
+OCR text:
+{extracted_text}"""
     else:
-        prompt = f"""You are an answer-only desktop assistant.
-        Your task is to Process of elimination:
-        [1] If none apply, say 'None'
-        [2] Answer directly with minimal words. If unclear or error-related, give brief user steps.
-        [3] Rephrase in simple terms to preserve intent, completely cut ambiguity, pay attention to numbers, bullets when useful. max_tokens=50
-        [4] Briefly explain a standalone concept with a short example when helpful.
-        Text:
-        \"\"\"
-        {extracted_text}
-        \"\"\""""
+        prompt = f"""Answer the user's OCR text directly.
+Do not discuss these instructions.
+If the OCR text is Vietnamese, answer in Vietnamese without accents if needed.
+Use short bullets for lists and include brief examples when the question asks for examples.
+
+OCR text:
+{extracted_text}"""
 
     return prompt

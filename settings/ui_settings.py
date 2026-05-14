@@ -6,13 +6,17 @@ and if you want to see a standalone settings menu, there's a demo version in the
 
 from PySide6 import QtWidgets, QtGui, QtCore
 from settings import store_key
+import os
+
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SETTINGS_ICON_PATH = os.path.join(PROJECT_ROOT, "capture", "img", "arrow.ico")
 
 class SettingsWindow(QtWidgets.QMainWindow):
     def __init__(self, on_exit_callback=None):
         super().__init__()
         self.setWindowTitle("Settings")
-        self.setGeometry(120, 120, 150, 150)
-        self.setWindowIcon(QtGui.QIcon("../capture/img/arrow.ico"))
+        self.setGeometry(120, 120, 420, 220)
+        self.setWindowIcon(QtGui.QIcon(SETTINGS_ICON_PATH))
         self.on_exit_callback = on_exit_callback
         self.init_ui()
         self.load_saved_settings()
@@ -27,6 +31,8 @@ class SettingsWindow(QtWidgets.QMainWindow):
         self.ai_dropdown = QtWidgets.QComboBox()
         self.ai_dropdown.addItems(["ChatGPT", "Claude", "Gemini"])
         self.ai_dropdown.currentTextChanged.connect(self.update_api_key_placeholder)
+        self.ai_dropdown.currentTextChanged.connect(self.update_base_url_placeholder)
+        self.ai_dropdown.currentTextChanged.connect(self.update_model_name_placeholder)
         ai_layout.addWidget(self.ai_label)
         ai_layout.addWidget(self.ai_dropdown)
         layout.addLayout(ai_layout)
@@ -42,6 +48,24 @@ class SettingsWindow(QtWidgets.QMainWindow):
         api_layout.addWidget(self.api_key_button)
         api_layout.addWidget(self.api_key_input)
         layout.addLayout(api_layout)
+
+        # Base URL Row
+        base_url_layout = QtWidgets.QHBoxLayout()
+        self.base_url_label = QtWidgets.QLabel("Base URL")
+        self.base_url_input = QtWidgets.QLineEdit()
+        self.base_url_input.setPlaceholderText("https://api.openai.com/v1")
+        base_url_layout.addWidget(self.base_url_label)
+        base_url_layout.addWidget(self.base_url_input)
+        layout.addLayout(base_url_layout)
+
+        # Model Name Row
+        model_name_layout = QtWidgets.QHBoxLayout()
+        self.model_name_label = QtWidgets.QLabel("Model name")
+        self.model_name_input = QtWidgets.QLineEdit()
+        self.model_name_input.setPlaceholderText("gpt-3.5-turbo")
+        model_name_layout.addWidget(self.model_name_label)
+        model_name_layout.addWidget(self.model_name_input)
+        layout.addLayout(model_name_layout)
 
         # Correction Mode Toggle
         correction_layout = QtWidgets.QHBoxLayout()
@@ -66,6 +90,8 @@ class SettingsWindow(QtWidgets.QMainWindow):
 
         self.setCentralWidget(central_widget)
         self.update_api_key_placeholder()
+        self.update_base_url_placeholder()
+        self.update_model_name_placeholder()
 
     def exit_app(self):
         if self.on_exit_callback:
@@ -82,19 +108,25 @@ class SettingsWindow(QtWidgets.QMainWindow):
         if "correction_mode" in config:
             self.correction_mode_checkbox.setChecked(config["correction_mode"])
 
-        # Load placeholder for API key
+        # Load saved placeholders/settings
         self.update_api_key_placeholder()
+        self.update_base_url_placeholder()
+        self.update_model_name_placeholder()
 
     def save_settings(self):
         selected_model = self.ai_dropdown.currentText()
         api_key = self.api_key_input.text()
+        base_url = self.base_url_input.text()
+        model_name = self.model_name_input.text()
         correction_mode = self.correction_mode_checkbox.isChecked()
 
         from settings import store_key
         store_key.save_user_settings(
             model=selected_model,
             api_key=api_key,
-            correction_mode=correction_mode
+            correction_mode=correction_mode,
+            base_url=base_url,
+            model_name=model_name
         )
 
         # Trigger tooltip update if SnipApp is running
@@ -103,7 +135,9 @@ class SettingsWindow(QtWidgets.QMainWindow):
             app_instance.update_tooltip()
 
         self.update_api_key_placeholder()
-        QtWidgets.QMessageBox.information(self, "Settings Saved", f"{selected_model} API Key securely saved.")
+        self.update_base_url_placeholder()
+        self.update_model_name_placeholder()
+        QtWidgets.QMessageBox.information(self, "Settings Saved", f"{selected_model} settings saved.")
 
     def show_help(self):
         QtWidgets.QMessageBox.information(
@@ -137,6 +171,26 @@ class SettingsWindow(QtWidgets.QMainWindow):
             self.api_key_input.setPlaceholderText("☑ Key saved")
         else:
             self.api_key_input.setPlaceholderText("☒ Key required")
+
+    def update_base_url_placeholder(self):
+        model = self.ai_dropdown.currentText()
+        config = store_key.load_config()
+        base_url = config.get("base_urls", {}).get(model, "")
+        self.base_url_input.setText(base_url)
+        if model == "ChatGPT":
+            self.base_url_input.setPlaceholderText("https://api.openai.com/v1")
+        else:
+            self.base_url_input.setPlaceholderText("Optional for OpenAI-compatible APIs")
+
+    def update_model_name_placeholder(self):
+        model = self.ai_dropdown.currentText()
+        config = store_key.load_config()
+        model_name = config.get("model_names", {}).get(model, "")
+        self.model_name_input.setText(model_name)
+        if model == "ChatGPT":
+            self.model_name_input.setPlaceholderText("gpt-3.5-turbo")
+        else:
+            self.model_name_input.setPlaceholderText("Provider model name")
 
 
 # Only run standalone if executed directly

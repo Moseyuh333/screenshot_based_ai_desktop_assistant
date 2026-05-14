@@ -31,18 +31,36 @@ def save_config(config_data):
     with open(CONFIG_FILE, "w") as f:
         json.dump(config_data, f, indent=4)
 
-# Save user settings (model + key + correction mode)
-def save_user_settings(model, api_key, correction_mode=False):
+def normalize_base_url(base_url):
+    base_url = (base_url or "").strip()
+    return base_url.rstrip("/")
+
+def normalize_model_name(model_name):
+    return (model_name or "").strip()
+
+# Save user settings (model + key + correction mode + base URL + model name)
+def save_user_settings(model, api_key=None, correction_mode=False, base_url=None, model_name=None):
     config = load_config()
 
     if "api_keys" not in config:
         config["api_keys"] = {}
+    if "base_urls" not in config:
+        config["base_urls"] = {}
+    if "model_names" not in config:
+        config["model_names"] = {}
 
-    # TEST: Save as plain text, then run production and comment-out this line, check config.json to see changes
-    # config["api_keys"][model] = api_key
+    if api_key:
+        # TEST: Save as plain text, then run production and comment-out this line, check config.json to see changes
+        # config["api_keys"][model] = api_key
 
-    # PRODUCTION: Save encrypted version
-    config["api_keys"][model] = encrypt_api_key(api_key)
+        # PRODUCTION: Save encrypted version
+        config["api_keys"][model] = encrypt_api_key(api_key)
+
+    if base_url is not None:
+        config["base_urls"][model] = normalize_base_url(base_url)
+
+    if model_name is not None:
+        config["model_names"][model] = normalize_model_name(model_name)
 
     config["selected_model"] = model
     config["correction_mode"] = correction_mode
@@ -61,3 +79,11 @@ def load_api_key(model):
     except Exception as e:
         print(f"Decryption error: {e}")
         return None
+
+def load_base_url(model):
+    config = load_config()
+    return normalize_base_url(config.get("base_urls", {}).get(model))
+
+def load_model_name(model):
+    config = load_config()
+    return normalize_model_name(config.get("model_names", {}).get(model))

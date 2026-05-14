@@ -22,9 +22,9 @@ Saving API key for Gemini...
 Settings saved for Gemini. Correction mode: False
 
 Verifying API key decryption:
-ChatGPT: Match | Loaded: sk-chatgpt-test-key-123
-Claude: Match | Loaded: sk-claude-test-key-456
-Gemini: Match | Loaded: sk-gemini-test-key-789
+ChatGPT: Match | Loaded: dummy-chatgpt-test-key-123
+Claude: Match | Loaded: dummy-claude-test-key-456
+Gemini: Match | Loaded: dummy-gemini-test-key-789
 
 Current config.json content:
 selected_model: Gemini
@@ -36,9 +36,9 @@ from settings import store_key, config
 
 # Test values
 test_keys = {
-    "ChatGPT": "sk-chatgpt-test-key-123",
-    "Claude": "sk-claude-test-key-456",
-    "Gemini": "sk-gemini-test-key-789"
+    "ChatGPT": "dummy-chatgpt-test-key-123",
+    "Claude": "dummy-claude-test-key-456",
+    "Gemini": "dummy-gemini-test-key-789"
 }
 
 # Save all test keys
